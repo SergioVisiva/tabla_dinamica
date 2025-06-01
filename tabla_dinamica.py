@@ -2,55 +2,37 @@ import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Cargar datos desde un archivo CSV
-@st.cache_data()
-def load_data():
-    data = pd.read_csv("data.csv", parse_dates=["referenceDate"])
-    return data
+st.set_page_config(page_title="Tabla Dinámica", layout="wide")
 
-data = load_data()
+# Datos embebidos directamente en el código
+data = {
+    "Producto": ["Hamburguesa", "Hamburguesa", "Papas", "Refresco", "Papas", "Refresco"],
+    "Cantidad": [10, 5, 20, 15, 10, 5],
+    "Precio_Unitario": [12, 12, 5, 3, 5, 3],
+    "Vendedor": ["Luis", "Ana", "Luis", "Ana", "Luis", "Luis"],
+    "Fecha": ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02", "2024-05-03", "2024-05-03"]
+}
 
-# Configurar opciones de la tabla
-gb = GridOptionsBuilder.from_dataframe(data)
+df = pd.DataFrame(data)
+df["Fecha"] = pd.to_datetime(df["Fecha"])
 
-# Habilitar características por defecto
-gb.configure_default_column(
-    resizable=True,
-    filterable=True,
-    sortable=True,
-    editable=False,
-    groupable=True
-)
-
-# Configurar columnas específicas
-gb.configure_column("state", header_name="State", width=80)
-gb.configure_column("powerPlant", header_name="Power Plant", flex=1, tooltipField="powerPlant")
-gb.configure_column("recordType", header_name="Record Type", width=110)
-gb.configure_column("buyer", header_name="Buyer", width=150, tooltipField="buyer")
-gb.configure_column(
-    "referenceDate",
-    header_name="Reference Date",
-    width=100,
-    valueFormatter="value != undefined ? new Date(value).toLocaleString('en-US', {dateStyle:'medium'}): ''",
-    pivot=True
-)
-gb.configure_column(
-    "hoursInMonth",
-    header_name="Hours in Month",
-    width=50,
-    type=["numericColumn"]
-)
-gb.configure_column(
-    "volumeMWh",
-    header_name="Volume [MWh]",
-    width=100,
-    type=["numericColumn"],
-    valueFormatter="value.toLocaleString()",
-    aggFunc="sum"
-)
-
-# Habilitar modo de pivoteo
+# Configurar opciones de tabla dinámica
+gb = GridOptionsBuilder.from_dataframe(df)
+gb.configure_default_column(groupable=True, enablePivot=True, enableValue=True, editable=False)
+gb.configure_side_bar()
 gb.configure_grid_options(pivotMode=True)
+
+grid_options = gb.build()
+
+# Mostrar la tabla dinámica
+st.title("Tabla Dinámica Interactiva (Estilo Excel)")
+AgGrid(
+    df,
+    gridOptions=grid_options,
+    enable_enterprise_modules=True,
+    fit_columns_on_grid_load=True,
+    height=400
+)
 
 # Construir opciones de la tabla
 go = gb.build()
