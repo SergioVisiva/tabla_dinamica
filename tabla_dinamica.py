@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
-# Datos simulados
+# Simulación de datos
 data = {
     "Fecha": ["2024-06-01", "2024-06-02", "2024-06-03", "2024-06-04"],
     "Categoría": ["Hamburguesas", "Papas", "Bebidas", "Hamburguesas"],
@@ -12,29 +11,29 @@ data = {
 }
 df = pd.DataFrame(data)
 
-# Código JS para pintar la columna "Cantidad"
-cellstyle_jscode = JsCode("""
-function(params) {
-    if (params.value == null) {
-        return {};
-    }
-    if (params.value < 10) {
-        return { 'color': 'white', 'backgroundColor': 'red' };
-    } else if (params.value < 20) {
-        return { 'color': 'black', 'backgroundColor': 'yellow' };
-    } else {
-        return { 'color': 'white', 'backgroundColor': 'green' };
-    }
-}
-""")
+st.title("Tabla con filtros y resaltado de columna 'Cantidad'")
 
-# Configurar tabla con filtros y colores
-gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_default_column(filter=True, sortable=True, resizable=True)
-gb.configure_column("Cantidad", cellStyle=cellstyle_jscode)
-gridOptions = gb.build()
+# --- Filtros ---
+categorias = st.multiselect("Filtrar por Categoría", options=df["Categoría"].unique(), default=df["Categoría"].unique())
+producto = st.text_input("Buscar Producto")
 
-# Mostrar la tabla
-st.title("Tabla con filtros y colores en 'Cantidad'")
-AgGrid(df, gridOptions=gridOptions, theme="alpine", fit_columns_on_grid_load=True)
+df_filtrado = df[df["Categoría"].isin(categorias)]
+if producto:
+    df_filtrado = df_filtrado[df_filtrado["Producto"].str.contains(producto, case=False)]
+
+# --- Aplicar color a la columna Cantidad ---
+def resaltar_cantidad(val):
+    if val < 10:
+        color = 'background-color: red; color: white'
+    elif val < 20:
+        color = 'background-color: yellow; color: black'
+    else:
+        color = 'background-color: green; color: white'
+    return color
+
+styled_df = df_filtrado.style.applymap(resaltar_cantidad, subset=["Cantidad"])
+
+# --- Mostrar tabla ---
+st.dataframe(styled_df, use_container_width=True)
+
 
