@@ -1,30 +1,40 @@
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
-# Datos
-data = [
-    {"Categoria": "Hamburguesas", "Producto": "Hamburguesa clásica", "Cantidad": 5, "Precio": 20, "Fecha": "2025-05-30"},
-    {"Categoria": "Hamburguesas", "Producto": "Hamburguesa doble", "Cantidad": 15, "Precio": 35, "Fecha": "2025-05-29"},
-    {"Categoria": "Papas", "Producto": "Papas fritas", "Cantidad": 25, "Precio": 10, "Fecha": "2025-05-28"},
-    {"Categoria": "Papas", "Producto": "Papas a la francesa", "Cantidad": 8, "Precio": 12, "Fecha": "2025-05-27"},
-]
-
+# Datos simulados
+data = {
+    "Fecha": ["2024-06-01", "2024-06-02", "2024-06-03", "2024-06-04"],
+    "Categoría": ["Hamburguesas", "Papas", "Bebidas", "Hamburguesas"],
+    "Producto": ["Clásica", "Fritas", "Coca-Cola", "Doble carne"],
+    "Cantidad": [5, 15, 25, 8],
+    "Precio": [15.0, 8.0, 5.0, 20.0]
+}
 df = pd.DataFrame(data)
 
-# Configuración simple de AgGrid mostrando solo Cantidad agrupada por Categoría
-gb = GridOptionsBuilder.from_dataframe(df[['Categoria', 'Cantidad']])
-gb.configure_column("Categoria", rowGroup=True, hide=False)  # Agrupar por categoría y mostrarla
-gb.configure_column("Cantidad", aggFunc='sum')  # Mostrar suma de cantidades por categoría
+# Código JS para pintar la columna "Cantidad"
+cellstyle_jscode = JsCode("""
+function(params) {
+    if (params.value == null) {
+        return {};
+    }
+    if (params.value < 10) {
+        return { 'color': 'white', 'backgroundColor': 'red' };
+    } else if (params.value < 20) {
+        return { 'color': 'black', 'backgroundColor': 'yellow' };
+    } else {
+        return { 'color': 'white', 'backgroundColor': 'green' };
+    }
+}
+""")
 
+# Configurar tabla con filtros y colores
+gb = GridOptionsBuilder.from_dataframe(df)
+gb.configure_default_column(filter=True, sortable=True, resizable=True)
+gb.configure_column("Cantidad", cellStyle=cellstyle_jscode)
 gridOptions = gb.build()
 
-# Mostrar tabla
-st.header("Cantidades por Categoría")
-AgGrid(
-    df,
-    gridOptions=gridOptions,
-    enable_enterprise_modules=True,
-    theme="alpine",
-    height=300
-)
+# Mostrar la tabla
+st.title("Tabla con filtros y colores en 'Cantidad'")
+AgGrid(df, gridOptions=gridOptions, theme="alpine", fit_columns_on_grid_load=True)
+
