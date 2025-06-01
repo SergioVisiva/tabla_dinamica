@@ -1,51 +1,45 @@
-from st_aggrid import AgGrid, GridOptionsBuilder
-import pandas as pd
 import streamlit as st
+import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Datos
-data = {
-    "Categoria": ["Hamburguesas", "Hamburguesas", "Papas", "Papas"],
-    "Producto": ["Hamburguesa Clásica", "Hamburguesa Doble", "Papas Fritas", "Papas Gajo"],
-    "Cantidad": [10, 5, 20, 15],
-    "Precio": [5.0, 7.5, 3.0, 4.0],
-    "Fecha": pd.to_datetime(["2025-05-01", "2025-05-02", "2025-05-01", "2025-05-03"]),
-}
+# Datos dentro del código
+data = [
+    {"Categoria": "Hamburguesas", "Producto": "Hamburguesa clásica", "Cantidad": 5, "Precio": 20, "Fecha": "2025-05-30"},
+    {"Categoria": "Hamburguesas", "Producto": "Hamburguesa doble", "Cantidad": 15, "Precio": 35, "Fecha": "2025-05-29"},
+    {"Categoria": "Papas", "Producto": "Papas fritas", "Cantidad": 25, "Precio": 10, "Fecha": "2025-05-28"},
+    {"Categoria": "Papas", "Producto": "Papas a la francesa", "Cantidad": 8, "Precio": 12, "Fecha": "2025-05-27"},
+]
 
 df = pd.DataFrame(data)
 
-# Crear GridOptionsBuilder
+# Agregar columna con emoji para la fecha para visual rápido
+def emoji_fecha(fecha_str):
+    from datetime import datetime, timedelta
+    fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+    hoy = datetime.now()
+    delta = (hoy - fecha).days
+    if delta <= 1:
+        return "🟢 " + fecha_str  # reciente
+    elif delta <= 3:
+        return "🟡 " + fecha_str  # medio reciente
+    else:
+        return "🔴 " + fecha_str  # viejo
+
+df["FechaVisual"] = df["Fecha"].apply(emoji_fecha)
+
+# Construir opciones de grilla con jerarquía por Categoria y Producto
 gb = GridOptionsBuilder.from_dataframe(df)
-
-# Configurar para agrupar por 'Categoria' y ocultar esa columna (se usa solo para grupo)
-gb.configure_column("Categoria", rowGroup=True, hide=True)
-
-# Configurar columnas para que 'Producto' no se agrupe
-gb.configure_column("Producto", rowGroup=False)
-
-# Configurar estilo condicional para 'Cantidad' (color semáforo)
-cellsytle_jscode = """
-function(params) {
-    if (params.value == null) {
-        return {};
-    }
-    if (params.value < 10) {
-        return { 'color': 'white', 'backgroundColor': 'red' };
-    } else if (params.value < 20) {
-        return { 'color': 'black', 'backgroundColor': 'yellow' };
-    } else {
-        return { 'color': 'white', 'backgroundColor': 'green' };
-    }
-}
-"""
-gb.configure_column("Cantidad", cellStyle=cellsytle_jscode)
+gb.configure_column("Categoria", rowGroup=True, hide=True)  # Grupo jerárquico
+gb.configure_column("Producto", rowGroup=True, hide=True)
+gb.configure_column("Cantidad", header_name="Cantidad",
+                    cellStyle=lambda params: {
+                        'backgroundColor': ('#ffcccc' if params['value'] < 10 else '#fff5cc' if params['value'] < 20 else '#ccffcc'),
+                        'color': 'black'
+                    })
+gb.configure_column("Precio")
+gb.configure_column("FechaVisual", header_name="Fecha")
 
 gridOptions = gb.build()
 
-AgGrid(
-    df,
-    gridOptions=gridOptions,
-    enable_enterprise_modules=True,
-    theme="alpine",
-    fit_columns_on_grid_load=True,
-)
-
+# Mostrar tabla con st_aggrid
+AgGrid(df, gridOptions=gridOptions, enable_enterprise_modules=True, theme="alpine", fit_columns_on_grid_load=True)
