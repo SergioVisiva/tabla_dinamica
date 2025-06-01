@@ -4,40 +4,40 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Tabla Dinámica", layout="wide")
 
-# Datos incluidos directamente en el código
+# Datos con la nueva columna "Categoría"
 data = {
     "Producto": ["Hamburguesa", "Hamburguesa", "Papas", "Refresco", "Papas", "Refresco"],
     "Cantidad": [10, 5, 20, 15, 10, 5],
     "Precio_Unitario": [12, 12, 5, 3, 5, 3],
     "Vendedor": ["Luis", "Ana", "Luis", "Ana", "Luis", "Luis"],
-    "Fecha": ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02", "2024-05-03", "2024-05-03"]
+    "Fecha": ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02", "2024-05-03", "2024-05-03"],
+    "Categoría": ["Comida", "Comida", "Comida", "Bebida", "Comida", "Bebida"]
 }
 
 df = pd.DataFrame(data)
 df["Fecha"] = pd.to_datetime(df["Fecha"])
-
-# Calcular columna de ingreso total
 df["Total_Venta"] = df["Cantidad"] * df["Precio_Unitario"]
 
-# Crear configuración de la tabla
+# Configuración de tabla dinámica
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=False)
-gb.configure_side_bar()  # Barra lateral para agrupar, filtrar, etc.
+gb.configure_column("Categoría", rowGroup=True, hide=True)  # Agrupa por Categoría
+gb.configure_side_bar()  # Barra lateral para filtrar, agrupar, etc.
 gb.configure_selection('single')
 
-# Construir opciones
 gridOptions = gb.build()
 
-# Mostrar tabla
+# Render de la app
 st.title("Tabla Dinámica Estilo Excel")
-st.markdown("Agrupa, ordena y analiza los datos como en una tabla dinámica.")
+st.markdown("Agrupa por categoría de comida para analizar ventas de hamburguesas, papas, bebidas, etc.")
 
 AgGrid(
     df,
     gridOptions=gridOptions,
     enable_enterprise_modules=True,
     fit_columns_on_grid_load=True,
-    height=450,
+    height=500,
     theme="alpine"
 )
+
 
