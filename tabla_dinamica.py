@@ -4,7 +4,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Tabla Dinámica", layout="wide")
 
-# Datos embebidos directamente en el código
+# Datos incluidos directamente en el código
 data = {
     "Producto": ["Hamburguesa", "Hamburguesa", "Papas", "Refresco", "Papas", "Refresco"],
     "Cantidad": [10, 5, 20, 15, 10, 5],
@@ -16,27 +16,28 @@ data = {
 df = pd.DataFrame(data)
 df["Fecha"] = pd.to_datetime(df["Fecha"])
 
-# Configurar opciones de tabla dinámica
+# Calcular columna de ingreso total
+df["Total_Venta"] = df["Cantidad"] * df["Precio_Unitario"]
+
+# Crear configuración de la tabla
 gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_default_column(groupable=True, enablePivot=True, enableValue=True, editable=False)
-gb.configure_side_bar()
-gb.configure_grid_options(pivotMode=True)
+gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=False)
+gb.configure_side_bar()  # Barra lateral para agrupar, filtrar, etc.
+gb.configure_selection('single')
 
-grid_options = gb.build()
+# Construir opciones
+gridOptions = gb.build()
 
-# Mostrar la tabla dinámica
-st.title("Tabla Dinámica Interactiva (Estilo Excel)")
+# Mostrar tabla
+st.title("Tabla Dinámica Estilo Excel")
+st.markdown("Agrupa, ordena y analiza los datos como en una tabla dinámica.")
+
 AgGrid(
     df,
-    gridOptions=grid_options,
+    gridOptions=gridOptions,
     enable_enterprise_modules=True,
     fit_columns_on_grid_load=True,
-    height=400
+    height=450,
+    theme="alpine"
 )
 
-# Construir opciones de la tabla
-go = gb.build()
-
-# Mostrar la tabla en la aplicación
-st.title("Tabla Dinámica Interactiva")
-AgGrid(data, gridOptions=go, height=500, enable_enterprise_modules=True)
