@@ -11,16 +11,18 @@ data = {
 
 df = pd.DataFrame(data)
 
-st.set_page_config(page_title="Tabla Dinámica", layout="wide")
-st.title("📊 Ejemplo de Tabla Dinámica con Streamlit")
+st.title("📊 Tabla Dinámica - Vista fija")
 
-rows = st.multiselect('Selecciona columnas para filas', df.columns.tolist(), default=['Categoría'])
-cols = st.multiselect('Selecciona columnas para columnas', df.columns.tolist(), default=['Subcategoría'])
-vals = st.selectbox('Selecciona la columna de valores', ['Ventas', 'Cantidad'])
+# Tabla dinámica fija con índices y columnas definidos
+pivot = pd.pivot_table(
+    df,
+    index=['Categoría'],        # filas fijas
+    columns=['Subcategoría'],   # columnas fijas
+    values='Ventas',            # valor fijo
+    aggfunc='sum',
+    fill_value=0
+)
 
-if rows and cols:
-    pivot = pd.pivot_table(df, index=rows, columns=cols, values=vals, aggfunc='sum', fill_value=0)
-    st.subheader("Resultado de la tabla dinámica:")
-    st.dataframe(pivot, use_container_width=True)
-else:
-    st.warning("Por favor selecciona al menos una columna para filas y columnas.")
+st.write("Ventas por Categoría y Subcategoría:")
+st.dataframe(pivot, use_container_width=True)
+
