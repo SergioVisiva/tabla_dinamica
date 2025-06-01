@@ -20,7 +20,7 @@ data = {
 df = pd.DataFrame(data)
 df["Total"] = df["Cantidad"] * df["Precio Unitario"]
 
-# Filtros en sidebar
+# Filtros
 st.sidebar.header("Filtros")
 cliente_filter = st.sidebar.multiselect("Cliente", df["Cliente"].unique(), df["Cliente"].unique())
 producto_filter = st.sidebar.multiselect("Producto", df["Producto"].unique(), df["Producto"].unique())
@@ -62,9 +62,55 @@ with col1:
 with col2:
     fig_producto = px.bar(
         df_filtrado.groupby("Producto")["Total"].sum().reset_index(),
-        x="Producto", y="Total",
+        x="Producto",
+        y="Total",
         title="Ingresos por Producto",
         text_auto=True,
         color="Producto",
-       
+        color_discrete_sequence=px.colors.qualitative.Vivid
+    )
+    fig_producto.update_layout(showlegend=False)
+    st.plotly_chart(fig_producto, use_container_width=True)
+
+st.markdown("---")
+
+# Segunda fila: gráficos de pastel y línea lado a lado
+col3, col4 = st.columns(2)
+
+with col3:
+    estado_counts = df_filtrado["Estado"].value_counts().reset_index()
+    estado_counts.columns = ["Estado", "Cantidad"]
+    fig_estado = px.pie(
+        estado_counts,
+        values="Cantidad",
+        names="Estado",
+        title="Distribución de Estados de Pedidos",
+        color_discrete_sequence=px.colors.sequential.RdBu
+    )
+    st.plotly_chart(fig_estado, use_container_width=True)
+
+with col4:
+    cantidad_fecha = df_filtrado.groupby("Fecha")["Cantidad"].sum().reset_index()
+    fig_lineas = px.line(
+        cantidad_fecha,
+        x="Fecha",
+        y="Cantidad",
+        title="Cantidad de Pedidos por Fecha",
+        markers=True,
+        color_discrete_sequence=["#636EFA"]
+    )
+    st.plotly_chart(fig_lineas, use_container_width=True)
+
+st.markdown("---")
+
+# Resumen por Categoría y Estado (en una sola columna)
+st.subheader("Resumen por Categoría y Estado")
+tabla_resumen = df_filtrado.groupby(["Categoría", "Estado"]).agg({
+    "Cantidad": "sum",
+    "Total": "sum"
+}).reset_index()
+st.dataframe(tabla_resumen.style.format({"Total": "${:,.2f}"}), height=250)
+
+st.markdown("---")
+st.markdown("Dashboard creado con Streamlit y Plotly | Impresionante y profesional 💼📊")
 
