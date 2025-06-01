@@ -14,38 +14,12 @@ df = pd.DataFrame(data)
 
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_default_column(groupable=True)
-
 gb.configure_column("categoria", rowGroup=True, hide=True)
 gb.configure_column("producto", rowGroup=True, hide=True)
 
-gb.configure_column(
-    "cantidad",
-    cellStyle=lambda params: {
-        "color": "white",
-        "backgroundColor": "green" if params.value > 5 else "orange" if params.value > 0 else "red"
-    }
-)
-
-gb.configure_column(
-    "precio",
-    cellStyle=lambda params: {
-        "color": "white",
-        "backgroundColor": "green" if params.value > 20 else "orange" if params.value > 10 else "red"
-    }
-)
-
-gb.configure_column(
-    "fecha",
-    cellRendererJs="""
-    function(params) {
-        if (!params.value) {
-            return "";
-        }
-        let icon = params.value.endsWith("-31") ? "📅" : "📆";
-        return icon + " " + params.value;
-    }
-    """
-)
+# Colores sin funciones lambda, usando estilos estáticos para probar
+gb.configure_column("cantidad", cellStyle={'color': 'white', 'backgroundColor': 'green'})
+gb.configure_column("precio", cellStyle={'color': 'white', 'backgroundColor': 'orange'})
 
 gridOptions = gb.build()
 
